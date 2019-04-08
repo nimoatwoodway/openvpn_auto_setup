@@ -196,42 +196,35 @@ if kldstat|grep -q ipl; then echo -e "${blue}ipl allready loaded${NC}"
 	cp keys/ca.crt /usr/local/etc/openvpn/ssl
 	cp keys/dh1024.pem /usr/local/etc/openvpn/ssl
 
-echo "local $last_ip
+echo "# Port to use
+port 1194
+
+# First is the gateway (jail ip; netmask; IP-range start; IP-range stop)
+server-bridge 192.168.1.246 255.255.255.0 192.168.1.180 192.168.1.190
+
+# Scripts to load unload bridging device
+up /usr/local/etc/openvpn/up.sh
+down /usr/local/etc/openvpn/down.sh
+
+proto udp
 dev tap
+client-to-client
+script-security 2
+user nobody
+group nobody
 daemon
 comp-lzo
 comp-noadapt
-user nobody
-group nobody
 persist-key
 persist-tun
 verb 5
-proto $protocol
-lport $port
 mode server
 tls-server
 ping 10
 ping-exit 90
 tun-mtu 1500
-$comment fragment 1400
+fragment 1400
 mssfix
-#single-session
-management 127.0.0.1 3000
-#username-as-common-name
-#client-cert-not-required
-$duplicate duplicate-cn # allow multiple connection of user with some common name
-ifconfig ${internal_ip}.1 255.255.255.0 
-ifconfig-pool ${internal_ip}.2 ${internal_ip}.254
-#snndbuf 393216
-#rcvbuf 393216
-#push \"sndbuf 393216\"
-#push \"rcvbuf 393216\"
-
-push \"redirect-gateway\"
-push \"route-gateway ${internal_ip}.1\"
-push \"dhcp-option DNS 8.8.8.8\"
-push \"ping 10\"
-push \"ping-exit 90\"
 tmp-dir /usr/local/etc/openvpn/tmp
 writepid /var/run/openvpn.pid
 key-direction 1
@@ -251,6 +244,27 @@ key-direction 1
 #auth-user-pass-verify /home/scripts/openvpn/auth.pl via-env
 #client-connect /home/scripts/openvpn/connect.pl
 #client-disconnect /home/scripts/openvpn/disconnect.pl" > $OVPN/server.conf
+
+echo "#!/bin/sh
+# Setup Ethernet bridge
+ifconfig bridge0 create
+ifconfig bridge0 addm epair0b #this has to be the name of the virtual device and can differ. epair0b is also possible, check with ifconfig
+ifconfig bridge0 addm ${dev}
+ifconfig bridge0 inet 192.168.1.246/24 # the IP of your ovpn jail!
+ifconfig ${dev} up
+ifconfig bridge0 up" > $OVPN/up.sh
+
+echo "#!/bin/sh
+# Setup Ethernet bridge
+ifconfig bridge0 create
+ifconfig bridge0 addm epair0b #this has to be the name of the virtual device and can differ. epair0b is also possible, check with ifconfig
+ifconfig bridge0 addm ${dev}
+ifconfig bridge0 inet 192.168.1.246/24 # the IP of your ovpn jail!
+ifconfig ${dev} up
+ifconfig bridge0 up
+root@openvpnserver:~ # cat /usr/local/etc/openvpn/down.sh 
+#!/bin/sh
+ifconfig bridge0 destroy" > $OVPN/down.sh
 
         /usr/local/etc/rc.d/openvpn restart || echo -e "${red}can't restart vpn${NC}"
 fi
