@@ -7,6 +7,9 @@ Tested with Freenas 11.2-U3
 This HowTo is based on this HowTo: https://www.ixsystems.com/community/resources/openvpn-in-tap-bridge-mode-in-iocage-jail.85/ extendet with the auto create script from here: https://github.com/Fazik/openvpn_auto_setup
 Many thanks to the authors!
 
+ATTENTION: In version 11.2-U3 there is a known bug which should be fixed in 11.2-U4
+For now heres a fix: https://www.ixsystems.com/community/threads/openvpn-issues-in-new-jails-after-11-1.59828/post-505700
+
 ## Create Jail
 Create a jail with advances properties and these parameters:
 
