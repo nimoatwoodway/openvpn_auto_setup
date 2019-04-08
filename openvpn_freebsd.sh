@@ -256,15 +256,6 @@ ifconfig bridge0 up" > $OVPN/up.sh
 chmod +x $OVPN/up.sh
 
 echo "#!/bin/sh
-# Setup Ethernet bridge
-ifconfig bridge0 create
-ifconfig bridge0 addm epair0b #this has to be the name of the virtual device and can differ. epair0b is also possible, check with ifconfig
-ifconfig bridge0 addm ${dev}
-ifconfig bridge0 inet 192.168.1.246/24 # the IP of your ovpn jail!
-ifconfig ${dev} up
-ifconfig bridge0 up
-root@openvpnserver:~ # cat /usr/local/etc/openvpn/down.sh 
-#!/bin/sh
 ifconfig bridge0 destroy" > $OVPN/down.sh
 chmod +x $OVPN/down.sh
 
